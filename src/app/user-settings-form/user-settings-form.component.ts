@@ -1,6 +1,8 @@
 import { UserSettings } from './../data/user-settings';
 import { Component, OnInit } from '@angular/core';
 import { NgForm } from '@angular/forms';
+import { DataService } from '../data/data.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-user-settings-form',
@@ -19,13 +21,28 @@ export class UserSettingsFormComponent implements OnInit {
 
   userSettings: UserSettings = {...this.originalUserSettings};
 
-  constructor() { }
+  userSubscriptionType: Observable<string[]>;
+
+  postError: Boolean = false;
+  postErrorMessage: String = '';
+
+  constructor(private dataService: DataService) { }
 
   ngOnInit(): void {
+    this.userSubscriptionType = this.dataService.getSubscriptionType();
+  }
+
+  onHttpError(errorResponse: any) {
+    console.log('Error:', errorResponse);
+    this.postError = true;
+    this.postErrorMessage = errorResponse.error.errorMessage;
   }
 
   onSubmit(ngForm: NgForm): void {
-    console.log("submitting: ", ngForm.valid);
+    this.dataService.postUserSettingsForm(this.userSettings).subscribe(
+      result => console.log('success: ', result),
+      error => this.onHttpError(error)
+    );
   }
 
 }
